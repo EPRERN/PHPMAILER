@@ -19,6 +19,10 @@ var_dump($_FILES);
 $mail = new PHPMailer(true);
 
 try {
+  $mail->SMTPDebug = 2; // Nivel de depuración (0, 1, 2, o 3)
+$mail->Debugoutput = function ($str, $level) {
+    file_put_contents('debug.log', $str, FILE_APPEND);
+};
 
 
   //Server settings
@@ -69,32 +73,29 @@ try {
     }
 
     // Directorio de destino para guardar los archivos subidos
-    if (isset($_FILES['files'])) {
-      if (is_array($_FILES['files']['name'])) { // Verifica que 'name' sea un array
-          $totalFiles = count($_FILES['files']['name']);
-
-          for ($i = 0; $i < $totalFiles; $i++) {
-              $fileName = $_FILES['files']['name'][$i];
-              $fileTmpName = $_FILES['files']['tmp_name'][$i];
-              $fileSize = $_FILES['files']['size'][$i];
-
-              $destination = $uploadDir . $fileName;
-
-              if (move_uploaded_file($fileTmpName, $destination)) {
-                echo "Archivo $fileName subido correctamente a $destination<br>";
-                $uploadedFiles[] = $destination;
-            } else {
-                echo "Error al subir el archivo $fileName<br>";
-                // Agrega un log
-                error_log("Error al subir el archivo $fileName a $destination");
-            }
-          }
+    if (isset($_FILES['files']) && is_array($_FILES['files'])) {
+      $attachmentInfo = $_FILES['files'];
+  
+      $fileName = $attachmentInfo['name'];
+      $fileTmpName = $attachmentInfo['tmp_name'];
+      $fileSize = $attachmentInfo['size'];
+  
+      $destination = $uploadDir . $fileName;
+  
+      if (move_uploaded_file($fileTmpName, $destination)) {
+          echo "Archivo $fileName subido correctamente a $destination<br>";
+          $uploadedFiles[] = $destination;
       } else {
-          echo "El formato de archivos adjuntos no es válido<br>";
+          echo "Error al subir el archivo $fileName a $destination<br>";
+          echo "Error: " . $attachmentInfo['error'];
+          // Agrega un log
+          error_log("Error al subir el archivo $fileName a $destination - Error: " . $attachmentInfo['error']);
       }
   } else {
-      echo "No se detectaron archivos adjuntos<br>";
+      echo "El formato de archivos adjuntos no es válido o no se detectaron archivos adjuntos<br>";
   }
+   
+  
 
 
 
@@ -145,8 +146,8 @@ try {
 
     $mail->setFrom('administrador@eprern.gov.ar', 'admin');
     $mail->addAddress('lavila@eprern.gov.ar');     
-    $mail->addAddress('dsilvera@eprern.gov.ar');        
-    $mail->addAddress('pbejarano@eprern.gov.ar');          
+    $mail->addAddress('lautiavila96@gmail.com');        
+    // $mail->addAddress('pbejarano@eprern.gov.ar');          
    
     $mail->isHTML(true);
     $mail->Subject = 'Nuevo formulario de Reclamos';
